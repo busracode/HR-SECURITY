@@ -1,9 +1,17 @@
-secure_app/
+ik_guvenlik_sistemi/
 │
-├── app.py              # Uygulamanın ana giriş noktası (Flask config)
-├── models.py           # Veritabanı modelleri (User, Role)
-├── auth.py             # Kimlik doğrulama mantığı (Login/Register)
-├── crypto_utils.py     # Şifreleme ve Hash algoritmaları (Fernet/Bcrypt)
-├── templates/          # HTML dosyaları (login, dashboard, admin_panel)
-├── instance/           # SQLite veritabanı dosyası
-└── requirements.txt    # Gerekli kütüphaneler (flask, flask-sqlalchemy, bcrypt, cryptography)
+├── app.py                  # Flask uygulaması ve rota tanımlamaları
+├── database.py             # Veritabanı bağlantı ayarları
+├── models.py               # Veritabanı tabloları (Calisan, Kullanici, Roller)
+├── auth_manager.py         # Bcrypt ile Kayıt/Giriş işlemleri
+├── encryption_service.py   # Hassas verilerin (Maaş vb.) Fernet/AES ile şifrelenmesi
+├── decorators.py           # Admin (İK Müdürü) yetki kontrolü için özel fonksiyonlar
+│
+├── templates/              # HTML Arayüzleri
+│   ├── login.html          # Giriş ekranı
+│   ├── dashboard.html      # Çalışan kendi bilgilerini görür
+│   ├── ik_panel.html       # Sadece Adminlerin (İK) eriştiği çalışan listesi
+│   └── kayıt.html          # Yeni çalışan kaydı
+│
+└── instance/
+    └── ik_veritabani.db    # SQLite dosyası

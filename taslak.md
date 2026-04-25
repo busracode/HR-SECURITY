@@ -1,41 +1,36 @@
-# Güvenli Web Uygulaması Proje Planı
+# İnsan Kaynakları Güvenli Bilgi Sistemi - Proje Taslağı
 
-## Proje Hedefi
-Bu proje, kimlik doğrulama, rol tabanlı erişim kontrolü (RBAC) ve veri şifreleme özelliklerine sahip güvenli bir web tabanlı yönetim paneli oluşturmayı amaçlar.
+## Proje Tanımı
+Bu uygulama, bir şirketteki İK süreçlerini yönetirken çalışan verilerinin gizliliğini ve güvenliğini sağlamak amacıyla geliştirilmiştir.
 
-## Teknik Güvenlik Gereksinimleri
+## Güvenlik Bileşenleri Uygulama Planı
 
-### 1. Kimlik Doğrulama (Authentication)
-- **Algoritma:** Bcrypt (Hashing + Salting).
-- **Akış:** - Kayıt sırasında şifreler hashlenir.
-    - Giriş sırasında `check_password_hash` ile doğrulama yapılır.
-- **Ekran Görüntüsü Gereksinimi:** Login sayfası ve veritabanındaki hashlenmiş şifrelerin görünümü.
+### Adım 1: Kimlik Doğrulama (Bcrypt)
+- Kullanıcı kayıt olurken şifresi `salt` eklenerek hashlenir.
+- Veritabanında asla `12345` gibi açık şifre görünmez.
+- **Kanıt:** Veritabanı tablosundaki `password_hash` sütununun ekran görüntüsü.
 
-### 2. Rol Tabanlı Erişim Kontrolü (RBAC)
-- **Roller:** `Admin`, `User`.
-- **Kısıtlamalar:** - `/admin` rotasına sadece Admin rolündeki kullanıcılar erişebilir.
-    - Yetkisiz girişlerde "403 Forbidden" veya Login sayfasına yönlendirme yapılır.
-- **Ekran Görüntüsü Gereksinimi:** Admin paneli erişimi ve bir User'ın admin sayfasına girmeye çalıştığında aldığı hata.
+### Adım 2: İK Rol Yönetimi (RBAC)
+- **İK Müdürü (Admin):** Tüm çalışanların bilgilerini görüntüleme ve `/ik-panel` sayfasına erişim yetkisi.
+- **Çalışan (User):** Sadece kendi dashboard sayfasını görüntüleme yetkisi.
+- **Kontrol:** Kod içerisinde `@ik_yetkisi_gerekli` dekoratörü ile sayfalar korunur.
 
-### 3. Veri Şifreleme (Encryption)
-- **Kütüphane:** `cryptography.fernet`.
-- **Süreç:**
-    - Hassas bir veri alanı (örn: "Secret Note") belirlenecek.
-    - Veri kaydedilirken AES ile şifrelenecek.
-    - Dashboard'da gösterilirken anahtar (key) ile deşifre edilecek.
-- **Ekran Görüntüsü Gereksinimi:** Veritabanındaki şifreli (okunamaz) veri ve uygulamanın içindeki çözülmüş hali.
+### Adım 3: Hassas Veri Şifreleme (AES-128/Fernet)
+- **Şifrelenecek Alanlar:** Maaş Bilgisi, Telefon Numarası.
+- **İşlem:** Veri formdan alınır, şifrelenir ve DB'ye kaydedilir. Görüntülenirken anlık olarak deşifre edilir.
+- **Kanıt:** Veritabanındaki anlaşılmaz şifreli metin ile arayüzdeki gerçek verinin karşılaştırmalı görüntüsü.
 
-## Uygulama Geliştirme Adımları
-1. **[ ] Ortam Kurulumu:** Flask ve gerekli güvenlik kütüphanelerinin yüklenmesi.
-2. **[ ] Veritabanı Tasarımı:** Kullanıcı tablosuna `role` ve `encrypted_data` sütunlarının eklenmesi.
-3. **[ ] Hash Fonksiyonu:** Kayıt olma fonksiyonunda Bcrypt entegrasyonu.
-4. **[ ] Yetkilendirme:** `@admin_required` gibi bir decorator yazılması.
-5. **[ ] Şifreleme Modülü:** Veri saklama ve çekme sırasında Fernet metodlarının uygulanması.
-6. **[ ] Raporlama:** PDF'deki 5-8 sayfa kuralına göre ekran görüntüleriyle dökümantasyonun yazılması.
+## Veritabanı Model Taslağı (Örnek)
+| Sütun | Tip | Güvenlik Metodu |
+| :--- | :--- | :--- |
+| Kullanıcı Adı | String | Açık Metin |
+| Şifre | String | **Bcrypt Hash** |
+| Rol | String | Admin / User |
+| Maaş | String/Text | **Fernet Encryption** |
+| Telefon | String/Text | **Fernet Encryption** |
 
-## Rapor İçeriği (Taslak)
-1. **Giriş:** Projenin amacı ve kapsamı.
-2. **Sistem Tasarımı:** Mimari şeması ve akış diyagramı.
-3. **Kimlik Doğrulama:** Bcrypt neden seçildi? Düz metin şifrenin riskleri.
-4. **Erişim Kontrolü:** Roller nasıl yönetiliyor? Yetkisiz erişim nasıl engellendi?
-5. **Şifreleme Uygulaması:** AES/Fernet süreci ve anahtar yönetimi.
+## Rapor Akışı (PDF'e Uygun)
+1. **Sistem Tasarımı:** İK uygulamasının genel akışı.
+2. **Kimlik Doğrulama:** Şifre güvenliği neden önemli?
+3. **Erişim Kontrolü:** İK verilerine neden herkes ulaşamaz?
+4. **Şifreleme:** Veritabanı çalınsa bile maaş verileri nasıl güvende kalır?
