@@ -1,0 +1,13 @@
+frontend/
+├── public/
+├── src/
+│   ├── components/        # Navbar, Sidebar gibi ortak bileşenler
+│   ├── pages/
+│   │   ├── Login.js       # Giriş ekranı
+│   │   ├── Register.js    # Çalışan Kayıt
+│   │   ├── Dashboard.js   # Çalışan özel alanı (Deşifre edilmiş veriler)
+│   │   └── AdminPanel.js  # İK Müdürü özel alanı (RBAC testi için)
+│   ├── services/          # api.js (Axios/Fetch istekleri)
+│   ├── App.js             # Route tanımlamaları (Protected Routes)
+│   └── index.js
+└── package.json

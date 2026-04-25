@@ -1,36 +1,31 @@
-# İnsan Kaynakları Güvenli Bilgi Sistemi - Proje Taslağı
+# İK Güvenli Yönetim Sistemi (React & Flask)
 
-## Proje Tanımı
-Bu uygulama, bir şirketteki İK süreçlerini yönetirken çalışan verilerinin gizliliğini ve güvenliğini sağlamak amacıyla geliştirilmiştir.
+## 🛠 Teknoloji Yığını
+- **Frontend:** React.js (Arayüz ve Client-side Routing)
+- **Backend:** Flask (RESTful API)
+- **Güvenlik:** Bcrypt (Hashing), Cryptography.Fernet (AES Encryption)
+- **Veritabanı:** SQLite
 
-## Güvenlik Bileşenleri Uygulama Planı
+## 🔐 Güvenlik Uygulama Planı
 
-### Adım 1: Kimlik Doğrulama (Bcrypt)
-- Kullanıcı kayıt olurken şifresi `salt` eklenerek hashlenir.
-- Veritabanında asla `12345` gibi açık şifre görünmez.
-- **Kanıt:** Veritabanı tablosundaki `password_hash` sütununun ekran görüntüsü.
+### 1. Kimlik Doğrulama (Authentication)
+- **Backend:** Kullanıcı şifresi `bcrypt.generate_password_hash` ile saklanır. Giriş yapılırken API üzerinden doğrulanır.
+- **Frontend:** Giriş başarılıysa bir `token` veya `session` saklanır.
+- **Rapora Eklenecek:** Bcrypt ile hashlenmiş DB verisi görüntüsü.
 
-### Adım 2: İK Rol Yönetimi (RBAC)
-- **İK Müdürü (Admin):** Tüm çalışanların bilgilerini görüntüleme ve `/ik-panel` sayfasına erişim yetkisi.
-- **Çalışan (User):** Sadece kendi dashboard sayfasını görüntüleme yetkisi.
-- **Kontrol:** Kod içerisinde `@ik_yetkisi_gerekli` dekoratörü ile sayfalar korunur.
+### 2. Erişim Kontrolü (RBAC) - İK vs Personel
+- **Frontend Koruması:** `PrivateRoute` bileşeni ile Admin olmayan kullanıcının `/admin-panel` rotasına girmesi engellenir.
+- **Backend Koruması:** API tarafında her istekte kullanıcının rolü kontrol edilir (Yetkisiz bir kullanıcı API'den veri çekemez).
+- **Rapora Eklenecek:** "Yetkiniz yok" uyarısı alan kullanıcı ekran görüntüsü.
 
-### Adım 3: Hassas Veri Şifreleme (AES-128/Fernet)
-- **Şifrelenecek Alanlar:** Maaş Bilgisi, Telefon Numarası.
-- **İşlem:** Veri formdan alınır, şifrelenir ve DB'ye kaydedilir. Görüntülenirken anlık olarak deşifre edilir.
-- **Kanıt:** Veritabanındaki anlaşılmaz şifreli metin ile arayüzdeki gerçek verinin karşılaştırmalı görüntüsü.
+### 3. Hassas Veri Şifreleme (Encryption)
+- **Senaryo:** Çalışanların "Maaş" ve "Ev Adresi" veritabanında şifreli tutulur.
+- **İşlem:** Backend, DB'den aldığı şifreli veriyi API üzerinden göndermeden hemen önce `Fernet.decrypt()` ile çözer ve React'a gönderir.
+- **Rapora Eklenecek:** DB'deki anlamsız şifreli veri (Ciphertext) ve React ekranındaki çözülmüş veri.
 
-## Veritabanı Model Taslağı (Örnek)
-| Sütun | Tip | Güvenlik Metodu |
-| :--- | :--- | :--- |
-| Kullanıcı Adı | String | Açık Metin |
-| Şifre | String | **Bcrypt Hash** |
-| Rol | String | Admin / User |
-| Maaş | String/Text | **Fernet Encryption** |
-| Telefon | String/Text | **Fernet Encryption** |
-
-## Rapor Akışı (PDF'e Uygun)
-1. **Sistem Tasarımı:** İK uygulamasının genel akışı.
-2. **Kimlik Doğrulama:** Şifre güvenliği neden önemli?
-3. **Erişim Kontrolü:** İK verilerine neden herkes ulaşamaz?
-4. **Şifreleme:** Veritabanı çalınsa bile maaş verileri nasıl güvende kalır?
+## 🚀 Geliştirme Adımları
+1. Flask API rotalarını oluştur (Login/Data).
+2. Bcrypt ve Fernet servislerini yaz.
+3. React uygulamasını `npx create-react-app` ile kur.
+4. Axios kullanarak React ile Flask'ı bağla.
+5. RBAC için React Router korumalı rotaları (Protected Routes) ekle.

@@ -1,0 +1,6 @@
+backend/
+├── app.py                 # API rotaları (Login, Register, Employee Data)
+├── models.py              # DB Modelleri (User, Employee)
+├── security_logic.py      # Bcrypt (Hash) ve Fernet (AES) fonksiyonları
+├── middleware.py          # JWT veya Session tabanlı yetki kontrolü
+└── database.db            # SQLite dosyası
