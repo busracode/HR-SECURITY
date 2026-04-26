@@ -9,15 +9,15 @@ export const translations = {
         
         // Sidebar
         "sidebar.menu": "Main Menu",
-        "sidebar.dashboard": "Employee Dashboard",
-        "sidebar.admin": "Admin Panel",
+        "sidebar.dashboard": "Candidate Evaluation",
+        "sidebar.admin": "All Candidates (Admin)",
         "sidebar.secure_connection": "Secure Connection",
         "sidebar.encryption": "End-to-end encryption active.",
         
         // Login
         "login.title": "Sign In to System",
         "login.or": "Or",
-        "login.register_link": "create a new employee account",
+        "login.register_link": "create a new HR account",
         "login.email": "Email Address",
         "login.password": "Password",
         "login.button": "Sign In",
@@ -25,7 +25,7 @@ export const translations = {
         "login.error_generic": "An error occurred during sign in.",
         
         // Register
-        "register.title": "New Employee Registration",
+        "register.title": "New HR Registration",
         "register.already_have_account": "Already have an account?",
         "register.login_link": "Sign in here",
         "register.firstname": "First Name",
@@ -38,32 +38,33 @@ export const translations = {
         "register.password_mismatch": "Passwords do not match.",
         "register.success": "Registration successful! Redirecting to login...",
         
-        // Dashboard
-        "dashboard.title": "Employee Dashboard",
-        "dashboard.subtitle": "Welcome, your confidential and personal data is safely stored.",
-        "dashboard.security_notice": "Your data in this area is encrypted with AES-128 standard and decrypted only with your authorized session.",
-        "dashboard.personal_info": "Your Personal Information",
-        "dashboard.name": "Full Name",
-        "dashboard.email": "Email",
-        "dashboard.role": "Role",
-        "dashboard.role_admin": "Admin",
-        "dashboard.role_employee": "Employee",
-        "dashboard.department": "Department",
-        "dashboard.iban": "Bank IBAN (Encrypted Data)",
-        "dashboard.not_specified": "Not specified",
-        "dashboard.no_data": "Data not found or could not be decrypted",
+        // Dashboard (HR Specialist)
+        "dashboard.title": "Candidate Evaluation",
+        "dashboard.subtitle": "Evaluate candidates and manage encrypted salary expectations.",
+        "dashboard.security_notice": "Sensitive data (like Salary Expectations) is encrypted using AES-128 and is only decrypted based on Role-Based Access Control (RBAC).",
+        "dashboard.candidates_list": "Assigned Candidates",
+        "dashboard.add_note": "Add Secret Note",
+        "dashboard.name": "Candidate Name",
+        "dashboard.position": "Position",
+        "dashboard.salary_expectation": "Salary Expectation (Encrypted)",
+        "dashboard.secret_note": "Secret Note",
+        "dashboard.save_note": "Save Note",
+        "dashboard.no_data": "Loading or Encrypted",
+        "dashboard.loading": "Loading candidates...",
+        "dashboard.empty_list": "No candidates assigned to you yet.",
+        "dashboard.new_candidate": "Add New Candidate",
         
         // Admin Panel
-        "admin.title": "HR Management Center",
-        "admin.subtitle": "Only users with the Admin role can access this area.",
-        "admin.system_status": "System Status: Active",
-        "admin.total_employees": "Total Employees",
-        "admin.active_leaves": "Active Leaves",
-        "admin.system_alerts": "System Alerts",
-        "admin.recent_activities": "Recent Activities",
-        "admin.view_all": "View All",
-        "admin.loading": "Loading data...",
-        "admin.no_activity": "No activities found yet."
+        "admin.title": "Secure Portfolio Review (Admin)",
+        "admin.subtitle": "Full visibility into all candidates and encrypted records. (RBAC verification successful)",
+        "admin.system_status": "Encryption: Active",
+        "admin.total_candidates": "Total Candidates",
+        "admin.pending_reviews": "Pending Reviews",
+        "admin.security_alerts": "Security Alerts",
+        "admin.all_candidates": "All Candidates (Decrypted View)",
+        "admin.view_details": "View Details",
+        "admin.loading": "Loading candidate database...",
+        "admin.no_activity": "No candidates in the database."
     },
     tr: {
         // Navbar
@@ -75,15 +76,15 @@ export const translations = {
         
         // Sidebar
         "sidebar.menu": "Ana Menü",
-        "sidebar.dashboard": "Çalışan Paneli",
-        "sidebar.admin": "Yönetici Paneli",
+        "sidebar.dashboard": "Aday Değerlendirme",
+        "sidebar.admin": "Tüm Adaylar (Admin)",
         "sidebar.secure_connection": "Güvenli Bağlantı",
         "sidebar.encryption": "Uçtan uca şifreleme aktif.",
         
         // Login
         "login.title": "Sisteme Giriş Yap",
         "login.or": "Veya",
-        "login.register_link": "yeni bir personel hesabı oluşturun",
+        "login.register_link": "yeni bir İK hesabı oluşturun",
         "login.email": "E-posta Adresi",
         "login.password": "Şifre",
         "login.button": "Giriş Yap",
@@ -91,7 +92,7 @@ export const translations = {
         "login.error_generic": "Giriş yapılırken bir hata oluştu.",
         
         // Register
-        "register.title": "Yeni Personel Kaydı",
+        "register.title": "Yeni İK Kaydı",
         "register.already_have_account": "Zaten hesabınız var mı?",
         "register.login_link": "Buradan giriş yapın",
         "register.firstname": "Ad",
@@ -104,31 +105,32 @@ export const translations = {
         "register.password_mismatch": "Şifreler eşleşmiyor.",
         "register.success": "Kayıt başarıyla oluşturuldu! Giriş sayfasına yönlendiriliyorsunuz...",
         
-        // Dashboard
-        "dashboard.title": "Çalışan Paneli",
-        "dashboard.subtitle": "Hoş geldiniz, gizli ve kişisel verileriniz güvenle saklanmaktadır.",
-        "dashboard.security_notice": "Bu alandaki verileriniz AES-128 standardı ile şifrelenmiş olup, sadece yetkili oturumunuz ile deşifre edilerek görüntülenmektedir.",
-        "dashboard.personal_info": "Kişisel Bilgileriniz",
-        "dashboard.name": "Ad Soyad",
-        "dashboard.email": "E-Posta",
-        "dashboard.role": "Rol",
-        "dashboard.role_admin": "Yönetici",
-        "dashboard.role_employee": "Personel",
-        "dashboard.department": "Departman",
-        "dashboard.iban": "Banka IBAN (Şifrelenmiş Veri)",
-        "dashboard.not_specified": "Belirtilmemiş",
-        "dashboard.no_data": "Veri bulunamadı veya deşifre edilemedi",
+        // Dashboard (HR Specialist)
+        "dashboard.title": "Aday Değerlendirme",
+        "dashboard.subtitle": "Adayları inceleyin ve şifrelenmiş maaş beklentilerini yönetin.",
+        "dashboard.security_notice": "Maaş Beklentisi gibi hassas veriler AES-128 ile şifrelenir ve Rol Bazlı Erişim Kontrolü (RBAC) ile deşifre edilir.",
+        "dashboard.candidates_list": "Size Atanan Adaylar",
+        "dashboard.add_note": "Gizli Not Ekle",
+        "dashboard.name": "Aday Adı",
+        "dashboard.position": "Başvurduğu Pozisyon",
+        "dashboard.salary_expectation": "Maaş Beklentisi (Şifreli)",
+        "dashboard.secret_note": "Gizli Not",
+        "dashboard.save_note": "Notu Kaydet",
+        "dashboard.no_data": "Yükleniyor veya Şifreli",
+        "dashboard.loading": "Adaylar yükleniyor...",
+        "dashboard.empty_list": "Henüz size atanmış bir aday bulunmuyor.",
+        "dashboard.new_candidate": "Yeni Aday Ekle",
         
         // Admin Panel
-        "admin.title": "İK Yönetim Merkezi",
-        "admin.subtitle": "Sadece Admin yetkisine sahip kullanıcılar erişebilir.",
-        "admin.system_status": "Sistem Durumu: Aktif",
-        "admin.total_employees": "Toplam Çalışan",
-        "admin.active_leaves": "Aktif İzinler",
-        "admin.system_alerts": "Sistem Uyarıları",
-        "admin.recent_activities": "Son Aktiviteler",
-        "admin.view_all": "Tümünü Gör",
-        "admin.loading": "Veriler yükleniyor...",
-        "admin.no_activity": "Henüz bir aktivite bulunmuyor."
+        "admin.title": "Gizli İK Değerlendirme (Admin)",
+        "admin.subtitle": "Tüm adaylara ve şifreli kayıtlara tam erişim. (RBAC doğrulandı)",
+        "admin.system_status": "Şifreleme: Aktif",
+        "admin.total_candidates": "Toplam Aday",
+        "admin.pending_reviews": "Bekleyen Değerlendirmeler",
+        "admin.security_alerts": "Güvenlik Uyarıları",
+        "admin.all_candidates": "Tüm Adaylar (Deşifre Edilmiş Görünüm)",
+        "admin.view_details": "Detayları Gör",
+        "admin.loading": "Aday veritabanı yükleniyor...",
+        "admin.no_activity": "Veritabanında aday bulunmuyor."
     }
 };
