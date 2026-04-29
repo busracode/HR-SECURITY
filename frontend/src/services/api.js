@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Backend sunucusunun adresi (Şimdilik varsayılan 8000 olarak ayarlandı, gerekirse env'den çekilebilir)
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const api = axios.create({
     baseURL: API_URL,

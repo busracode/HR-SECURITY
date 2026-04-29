@@ -40,10 +40,10 @@ const Navbar = () => {
                     <div className="flex items-center gap-6">
                         <div className="text-lg bg-slate-50 px-5 py-2 rounded-2xl shadow-inner border border-slate-100 flex items-center">
                             <span className="text-slate-500 font-medium mr-2">{t('navbar.welcome')}</span>
-                            <span className="font-bold text-slate-800">{user.username || user.name}</span>
-                            {user.role === 'Admin' && (
+                            <span className="font-bold text-slate-800">{user?.user?.first_name || user?.first_name}</span>
+                            {user.role === 'HR' && (
                                 <span className="ml-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-sm font-bold px-3 py-1 rounded-lg shadow-md">
-                                    {t('navbar.admin')}
+                                    İK
                                 </span>
                             )}
                         </div>

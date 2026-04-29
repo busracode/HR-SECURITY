@@ -6,151 +6,189 @@ import api from '../services/api';
 const Dashboard = () => {
     const { user } = useAuth();
     const { t } = useLanguage();
-    const [candidates, setCandidates] = useState([]);
+    
+    const [application, setApplication] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [selectedCandidate, setSelectedCandidate] = useState(null);
-    const [secretNote, setSecretNote] = useState('');
-    const [savingNote, setSavingNote] = useState(false);
+    const [submitLoading, setSubmitLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    const [formData, setFormData] = useState({
+        job: '',
+        school: '',
+        department: '',
+        salary: ''
+    });
 
     useEffect(() => {
-        const fetchCandidates = async () => {
+        const fetchApplication = async () => {
             try {
-                const response = await api.get('/candidates');
-                setCandidates(response.data);
-            } catch (error) {
-                console.error("Error fetching candidates:", error);
+                const response = await api.get('/candidate/application');
+                if (response.data.application) {
+                    setApplication(response.data.application);
+                }
+            } catch (err) {
+                console.error("Error fetching application:", err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchCandidates();
+        fetchApplication();
     }, []);
 
-    const handleSaveNote = async (candidateId) => {
-        if (!secretNote.trim()) return;
-        setSavingNote(true);
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSuccess('');
+        setSubmitLoading(true);
+
         try {
-            await api.post(`/candidates/${candidateId}/note`, { note: secretNote });
-            // Optimistic update
-            setCandidates(prev => prev.map(c => 
-                c.id === candidateId ? { ...c, secret_note: secretNote } : c
-            ));
-            setSelectedCandidate(null);
-            setSecretNote('');
-        } catch (error) {
-            console.error("Error saving note:", error);
+            // Include first_name and last_name from the user context
+            const payload = {
+                first_name: user?.user?.first_name || user?.first_name || '',
+                last_name: user?.user?.last_name || user?.last_name || '',
+                ...formData
+            };
+            await api.post('/apply', payload);
+            setSuccess('Başvurunuz başarıyla alındı!');
+            
+            // Re-fetch application
+            const response = await api.get('/candidate/application');
+            if (response.data.application) {
+                setApplication(response.data.application);
+            }
+        } catch (err) {
+            setError(err.response?.data?.error || 'Başvuru sırasında bir hata oluştu.');
         } finally {
-            setSavingNote(false);
+            setSubmitLoading(false);
         }
     };
+
+    if (loading) {
+        return <div className="p-20 text-center text-2xl font-bold text-slate-500 animate-pulse">{t('dashboard.loading') || 'Yükleniyor...'}</div>;
+    }
 
     return (
         <div className="p-8 md:p-14 max-w-[90rem] mx-auto w-full min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
             <header className="mb-12 bg-white/70 backdrop-blur-md p-8 rounded-3xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.1)] border border-white">
                 <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-700 drop-shadow-sm">{t('dashboard.title')}</h1>
-                <p className="text-xl text-slate-600 mt-3 font-medium">{t('dashboard.subtitle')}</p>
+                <p className="text-xl text-slate-600 mt-3 font-medium">
+                    {t('dashboard.subtitle').replace('{name}', `${user?.user?.first_name || user?.first_name} ${user?.user?.last_name || user?.last_name}`)}
+                </p>
             </header>
 
-            <div className="mb-12 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-8 border-blue-500 rounded-2xl shadow-lg transform transition-all hover:scale-[1.01]">
-                <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                        <span className="text-3xl filter drop-shadow-md">🔒</span>
+            <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.15)] border-t border-l border-white overflow-hidden p-10">
+                {application ? (
+                    <div>
+                        <h3 className="text-2xl font-bold text-slate-800 drop-shadow-sm mb-6">{t('dashboard.status_title')}</h3>
+                        <div className="bg-green-50 border-l-8 border-green-500 p-6 rounded-2xl mb-8">
+                            <p className="text-xl font-bold text-green-800">{t('dashboard.status_success')}</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                                <p className="text-sm font-bold text-slate-500 mb-1">{t('dashboard.position')}</p>
+                                <p className="text-xl font-black text-slate-800">{application.job}</p>
+                            </div>
+                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                                <p className="text-sm font-bold text-slate-500 mb-1">{t('dashboard.school')}</p>
+                                <p className="text-xl font-black text-slate-800">{application.school}</p>
+                            </div>
+                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                                <p className="text-sm font-bold text-slate-500 mb-1">{t('dashboard.department')}</p>
+                                <p className="text-xl font-black text-slate-800">{application.department}</p>
+                            </div>
+                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 relative overflow-hidden group">
+                                <p className="text-sm font-bold text-slate-500 mb-1">{t('dashboard.salary_encrypted')}</p>
+                                <p className="text-xl font-black text-slate-800 blur-[3px] group-hover:blur-none transition-all duration-300">
+                                    {application.salary} ₺
+                                </p>
+                                <span className="absolute top-4 right-4 bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded">AES 256</span>
+                            </div>
+                        </div>
                     </div>
-                    <div className="ml-5">
-                        <p className="text-lg text-blue-800 font-bold drop-shadow-sm">
-                            {t('dashboard.security_notice')}
-                        </p>
+                ) : (
+                    <div>
+                        <h3 className="text-2xl font-bold text-slate-800 drop-shadow-sm mb-6">{t('dashboard.new_application')}</h3>
+                        <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-8 border-blue-500 rounded-2xl shadow-sm">
+                            <p className="text-lg text-blue-800 font-bold">{t('dashboard.security_notice')}</p>
+                        </div>
+
+                        {error && (
+                            <div className="bg-red-50 border-l-8 border-red-500 p-5 mb-6 rounded-xl">
+                                <p className="text-lg font-medium text-red-700">{error}</p>
+                            </div>
+                        )}
+                        {success && (
+                            <div className="bg-green-50 border-l-8 border-green-500 p-5 mb-6 rounded-xl">
+                                <p className="text-lg font-medium text-green-700">{success}</p>
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-lg font-bold text-slate-700 mb-2">{t('dashboard.form_position')}</label>
+                                    <input required type="text" name="job" value={formData.job} onChange={handleChange} className="w-full px-5 py-4 rounded-2xl border-2 border-slate-200 focus:ring-4 focus:ring-blue-500/30 outline-none font-medium bg-slate-50 focus:bg-white transition-all" placeholder="Frontend Developer" />
+                                </div>
+                                <div>
+                                    <label className="block text-lg font-bold text-slate-700 mb-2">{t('dashboard.form_salary')}</label>
+                                    <input required type="text" name="salary" value={formData.salary} onChange={handleChange} className="w-full px-5 py-4 rounded-2xl border-2 border-slate-200 focus:ring-4 focus:ring-blue-500/30 outline-none font-medium bg-slate-50 focus:bg-white transition-all" placeholder="50000" />
+                                </div>
+                                <div>
+                                    <label className="block text-lg font-bold text-slate-700 mb-2">{t('dashboard.form_school')}</label>
+                                    <input required type="text" name="school" value={formData.school} onChange={handleChange} className="w-full px-5 py-4 rounded-2xl border-2 border-slate-200 focus:ring-4 focus:ring-blue-500/30 outline-none font-medium bg-slate-50 focus:bg-white transition-all" placeholder="MIT" />
+                                </div>
+                                <div>
+                                    <label className="block text-lg font-bold text-slate-700 mb-2">{t('dashboard.form_department')}</label>
+                                    <input required type="text" name="department" value={formData.department} onChange={handleChange} className="w-full px-5 py-4 rounded-2xl border-2 border-slate-200 focus:ring-4 focus:ring-blue-500/30 outline-none font-medium bg-slate-50 focus:bg-white transition-all" placeholder="Computer Science" />
+                                </div>
+                            </div>
+                            <button type="submit" disabled={submitLoading} className="mt-8 w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xl py-5 rounded-2xl hover:-translate-y-1 hover:shadow-xl transition-all disabled:opacity-50 disabled:hover:-translate-y-0 disabled:hover:shadow-none">
+                                {submitLoading ? t('dashboard.submit_loading') : t('dashboard.submit_button')}
+                            </button>
+                        </form>
                     </div>
-                </div>
+                )}
             </div>
 
-            <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.15)] border-t border-l border-white overflow-hidden">
-                <div className="px-10 py-8 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white flex justify-between items-center">
-                    <h3 className="text-2xl font-bold text-slate-800 drop-shadow-sm">{t('dashboard.candidates_list')}</h3>
-                    <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-2 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all">
-                        + {t('dashboard.new_candidate')}
-                    </button>
-                </div>
+            {/* HR Upgrade Section */}
+            <div className="mt-12 bg-white/60 backdrop-blur-md rounded-3xl shadow-sm border border-slate-200 p-8 max-w-2xl mx-auto">
+                <h4 className="text-xl font-bold text-slate-700 mb-4 flex items-center gap-2">
+                    <span>🏢</span> {t('dashboard.hr_upgrade_title')}
+                </h4>
+                <p className="text-slate-500 font-medium mb-6">{t('dashboard.hr_upgrade_desc')}</p>
                 
-                <div className="p-10">
-                    {loading ? (
-                        <div className="text-center py-10 text-xl font-bold text-slate-500 animate-pulse">{t('dashboard.loading')}</div>
-                    ) : candidates.length > 0 ? (
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                            {candidates.map((candidate) => (
-                                <div key={candidate.id} className="bg-slate-50 p-6 rounded-3xl shadow-inner border border-slate-100 flex flex-col justify-between">
-                                    <div>
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <h4 className="text-2xl font-extrabold text-slate-800">{candidate.name}</h4>
-                                                <p className="text-md font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-lg inline-block mt-2">{candidate.position}</p>
-                                            </div>
-                                            <span className="bg-gradient-to-br from-slate-700 to-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2">
-                                                <span>AES</span> 🔒
-                                            </span>
-                                        </div>
-                                        
-                                        <div className="bg-white p-4 rounded-2xl border-2 border-slate-200 mb-4 shadow-sm">
-                                            <p className="text-sm font-bold text-slate-500 mb-1">{t('dashboard.salary_expectation')}</p>
-                                            <p className="font-mono font-black text-slate-800 break-all text-sm blur-[2px] hover:blur-none transition-all duration-300 select-all cursor-crosshair">
-                                                {candidate.encrypted_salary || 'b1g2k3j4h5g6f7d8s9a0...'}
-                                            </p>
-                                        </div>
-
-                                        <div className="mb-4">
-                                            <p className="text-sm font-bold text-slate-500 mb-1">{t('dashboard.secret_note')}</p>
-                                            <p className="text-slate-700 font-medium bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 italic">
-                                                {candidate.secret_note ? `"${candidate.secret_note}"` : "Henüz not eklenmemiş."}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="mt-4 pt-4 border-t border-slate-200">
-                                        {selectedCandidate === candidate.id ? (
-                                            <div className="space-y-3">
-                                                <textarea 
-                                                    className="w-full bg-white border-2 border-indigo-200 rounded-xl p-3 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 font-medium"
-                                                    rows="3"
-                                                    placeholder="Aday hakkında gizli İK notunuz..."
-                                                    value={secretNote}
-                                                    onChange={(e) => setSecretNote(e.target.value)}
-                                                />
-                                                <div className="flex gap-2">
-                                                    <button 
-                                                        onClick={() => handleSaveNote(candidate.id)}
-                                                        disabled={savingNote}
-                                                        className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition-colors flex-1"
-                                                    >
-                                                        {savingNote ? '...' : t('dashboard.save_note')}
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => { setSelectedCandidate(null); setSecretNote(''); }}
-                                                        className="bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors"
-                                                    >
-                                                        İptal
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <button 
-                                                onClick={() => { setSelectedCandidate(candidate.id); setSecretNote(candidate.secret_note || ''); }}
-                                                className="w-full text-indigo-600 font-bold py-3 border-2 border-indigo-100 rounded-xl hover:bg-indigo-50 transition-colors flex justify-center items-center gap-2"
-                                            >
-                                                📝 {t('dashboard.add_note')}
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-16">
-                            <p className="text-2xl text-slate-400 font-bold mb-4">📭</p>
-                            <p className="text-xl text-slate-500 font-medium">{t('dashboard.empty_list')}</p>
-                        </div>
-                    )}
-                </div>
+                <form 
+                    onSubmit={async (e) => {
+                        e.preventDefault();
+                        const code = e.target.elements.secret_code.value;
+                        if (!code) return;
+                        
+                        try {
+                            const res = await api.post('/hr/upgrade', { secret_code: code });
+                            alert(res.data.message);
+                            window.location.href = '/login'; // Force re-login
+                        } catch (err) {
+                            alert(err.response?.data?.error || 'Doğrulama başarısız!');
+                        }
+                    }} 
+                    className="flex gap-4"
+                >
+                    <input 
+                        type="password" 
+                        name="secret_code"
+                        placeholder={t('dashboard.hr_upgrade_placeholder')}
+                        className="flex-1 px-5 py-3 rounded-xl border-2 border-slate-200 focus:ring-4 focus:ring-indigo-500/20 outline-none font-medium bg-slate-50 focus:bg-white transition-all"
+                    />
+                    <button type="submit" className="bg-slate-800 text-white font-bold px-6 py-3 rounded-xl hover:bg-slate-700 transition-colors">
+                        {t('dashboard.hr_upgrade_button')}
+                    </button>
+                </form>
             </div>
         </div>
     );
