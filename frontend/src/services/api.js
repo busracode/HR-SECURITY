@@ -12,7 +12,7 @@ const api = axios.create({
 
 // Her istekte (request) otomatik olarak Authorization header eklemek için Interceptor
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -27,8 +27,8 @@ api.interceptors.response.use((response) => {
 }, (error) => {
     if (error.response && error.response.status === 401) {
         // Token süresi dolmuş veya geçersizse otomatik çıkış yap
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        sessionStorage.removeItem('token');
         window.location.href = '/login';
     }
     return Promise.reject(error);

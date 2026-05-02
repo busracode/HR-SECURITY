@@ -76,7 +76,7 @@ function App() {
                     } />
 
                     {/* Varsayılan Rota (Eğer oturum varsa dashboard'a, yoksa login'e atar) */}
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/" element={<Navigate to="/login" replace />} />
                     
                     {/* Bulunamayan sayfalar için */}
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
