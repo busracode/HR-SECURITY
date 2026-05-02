@@ -25,7 +25,7 @@ const Sidebar = () => {
                         >
                             <div className="flex items-center gap-3">
                                 <span className="text-xl">📊</span>
-                                Aday Paneli
+                                {t('sidebar.candidate_panel')}
                             </div>
                         </NavLink>
                     )}
@@ -43,7 +43,7 @@ const Sidebar = () => {
                         >
                             <div className="flex items-center gap-3">
                                 <span className="text-xl">⚙️</span>
-                                İK Yönetimi
+                                {t('sidebar.hr_management')}
                             </div>
                         </NavLink>
                     )}

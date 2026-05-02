@@ -20,11 +20,22 @@ const Navbar = () => {
     return (
         <nav className="bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] sticky top-0 z-50 px-8 py-5 flex justify-between items-center transition-all duration-300">
             <div className="flex items-center gap-4 group cursor-pointer">
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black text-2xl p-3 rounded-2xl leading-none shadow-[0_8px_15px_rgba(79,70,229,0.3)] group-hover:scale-105 transition-transform">
-                    İK
+                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-2 rounded-2xl shadow-[0_8px_15px_rgba(79,70,229,0.3)] group-hover:scale-105 transition-transform">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+                        {/* Left vertical of H */}
+                        <line x1="6" y1="4" x2="6" y2="20" />
+                        {/* Horizontal of H */}
+                        <line x1="6" y1="12" x2="12" y2="12" />
+                        {/* Right vertical of H / Stem of R */}
+                        <line x1="12" y1="4" x2="12" y2="20" />
+                        {/* Loop of R (Head/Chest of stickman) */}
+                        <path d="M 12 4 A 4 4 0 0 1 12 12" />
+                        {/* Leg of R (Right leg of stickman) */}
+                        <line x1="12" y1="12" x2="18" y2="20" />
+                    </svg>
                 </div>
                 <span className="font-extrabold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-slate-800 to-slate-600 tracking-tight drop-shadow-sm">
-                    HR Güvenlik
+                    HR
                 </span>
             </div>
             

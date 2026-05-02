@@ -13,6 +13,8 @@ export const translations = {
         "sidebar.admin": "All Candidates (Admin)",
         "sidebar.secure_connection": "Secure Connection",
         "sidebar.encryption": "End-to-end encryption active.",
+        "sidebar.candidate_panel": "Candidate Panel",
+        "sidebar.hr_management": "HR Management",
         
         // Login
         "login.title": "Sign In to System",
@@ -25,7 +27,7 @@ export const translations = {
         "login.error_generic": "An error occurred during sign in.",
         
         // Register
-        "register.title": "New HR Registration",
+        "register.title": "Register",
         "register.already_have_account": "Already have an account?",
         "register.login_link": "Sign in here",
         "register.firstname": "First Name",
@@ -97,6 +99,8 @@ export const translations = {
         "sidebar.admin": "Tüm Adaylar (Admin)",
         "sidebar.secure_connection": "Güvenli Bağlantı",
         "sidebar.encryption": "Uçtan uca şifreleme aktif.",
+        "sidebar.candidate_panel": "Aday Paneli",
+        "sidebar.hr_management": "İK Yönetimi",
         
         // Login
         "login.title": "Sisteme Giriş Yap",
@@ -109,7 +113,7 @@ export const translations = {
         "login.error_generic": "Giriş yapılırken bir hata oluştu.",
         
         // Register
-        "register.title": "Yeni İK Kaydı",
+        "register.title": "Kayıt Ol",
         "register.already_have_account": "Zaten hesabınız var mı?",
         "register.login_link": "Buradan giriş yapın",
         "register.firstname": "Ad",
