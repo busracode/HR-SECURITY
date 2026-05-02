@@ -12,23 +12,25 @@ const Sidebar = () => {
             <div className="mb-10">
                 <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 drop-shadow-sm">{t('sidebar.menu')}</h2>
                 <nav className="flex flex-col gap-3">
-                    <NavLink 
-                        to="/dashboard" 
-                        className={({ isActive }) => 
-                            `px-6 py-4 rounded-2xl text-lg font-bold transition-all duration-300 transform ${
-                                isActive 
-                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_10px_20px_rgba(79,70,229,0.3)] hover:-translate-y-1' 
-                                : 'bg-slate-50 text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-md border border-transparent hover:border-slate-100'
-                            }`
-                        }
-                    >
-                        <div className="flex items-center gap-3">
-                            <span className="text-xl">📊</span>
-                            {t('sidebar.dashboard')}
-                        </div>
-                    </NavLink>
+                    {user?.role === 'Candidate' && (
+                        <NavLink 
+                            to="/dashboard" 
+                            className={({ isActive }) => 
+                                `px-6 py-4 rounded-2xl text-lg font-bold transition-all duration-300 transform ${
+                                    isActive 
+                                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_10px_20px_rgba(79,70,229,0.3)] hover:-translate-y-1' 
+                                    : 'bg-slate-50 text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-md border border-transparent hover:border-slate-100'
+                                }`
+                            }
+                        >
+                            <div className="flex items-center gap-3">
+                                <span className="text-xl">📊</span>
+                                Aday Paneli
+                            </div>
+                        </NavLink>
+                    )}
                     
-                    {user?.role === 'Admin' && (
+                    {user?.role === 'HR' && (
                         <NavLink 
                             to="/admin" 
                             className={({ isActive }) => 
@@ -41,7 +43,7 @@ const Sidebar = () => {
                         >
                             <div className="flex items-center gap-3">
                                 <span className="text-xl">⚙️</span>
-                                {t('sidebar.admin')}
+                                İK Yönetimi
                             </div>
                         </NavLink>
                     )}

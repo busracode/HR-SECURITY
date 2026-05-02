@@ -35,14 +35,20 @@ const Register = () => {
         setLoading(true);
 
         try {
-            await api.post('/register', formData);
+            const payload = {
+                first_name: formData.firstName,
+                last_name: formData.lastName,
+                email: formData.email,
+                password: formData.password
+            };
+            await api.post('/register', payload);
             
             setSuccess(t('register.success'));
             setLoading(false);
             setTimeout(() => navigate('/login'), 2000);
             
         } catch (err) {
-            setError(err.response?.data?.message || t('login.error_generic')); // Varsa register spesifik hata eklenebilir
+            setError(err.response?.data?.error || t('login.error_generic'));
             setLoading(false);
         }
     };

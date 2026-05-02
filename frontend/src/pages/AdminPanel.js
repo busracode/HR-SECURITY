@@ -6,15 +6,17 @@ const AdminPanel = () => {
     const [stats, setStats] = useState({ totalCandidates: 0, pendingReviews: 0, alerts: 0 });
     const [candidates, setCandidates] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedCandidate, setSelectedCandidate] = useState(null);
+    const [secretNote, setSecretNote] = useState('');
+    const [savingNote, setSavingNote] = useState(false);
     
     const { t } = useLanguage();
 
     useEffect(() => {
         const fetchAdminData = async () => {
             try {
-                // Varsayılan istatistikler ve tüm aday listesi
-                const statsResponse = await api.get('/admin/stats').catch(() => ({ data: { totalCandidates: 0, pendingReviews: 0, alerts: 0 } }));
-                const candidatesResponse = await api.get('/admin/candidates').catch(() => ({ data: [] }));
+                const statsResponse = await api.get('/hr/stats').catch(() => ({ data: { totalCandidates: 0, pendingReviews: 0, alerts: 0 } }));
+                const candidatesResponse = await api.get('/hr/candidates').catch(() => ({ data: [] }));
                 
                 setStats(statsResponse.data);
                 setCandidates(candidatesResponse.data);
@@ -28,8 +30,29 @@ const AdminPanel = () => {
         fetchAdminData();
     }, []);
 
+    const handleSaveNote = async (candidateId) => {
+        setSavingNote(true);
+        try {
+            await api.post(`/hr/candidates/${candidateId}/note`, { note: secretNote });
+            setCandidates(prev => prev.map(c => 
+                c.id === candidateId ? { ...c, secret_note: secretNote } : c
+            ));
+            setSelectedCandidate(null);
+            setSecretNote('');
+            
+            // Re-fetch stats to update pending reviews
+            const statsResponse = await api.get('/hr/stats');
+            setStats(statsResponse.data);
+            
+        } catch (error) {
+            console.error("Error saving note:", error);
+        } finally {
+            setSavingNote(false);
+        }
+    };
+
     if (loading) {
-        return <div className="p-20 text-center text-2xl font-bold text-slate-500 animate-pulse">{t('admin.loading')}</div>;
+        return <div className="p-20 text-center text-2xl font-bold text-slate-500 animate-pulse">{t('admin.loading') || 'Yükleniyor...'}</div>;
     }
 
     return (
@@ -66,47 +89,86 @@ const AdminPanel = () => {
                 <div className="px-10 py-8 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white flex justify-between items-center">
                     <h3 className="text-2xl font-bold text-slate-800 drop-shadow-sm">{t('admin.all_candidates')}</h3>
                     <div className="bg-purple-100 text-purple-800 px-4 py-2 rounded-lg font-bold text-sm border border-purple-200">
-                        🔑 Tam Deşifre Yetkisi Aktif
+                        {t('admin.decryption_active')}
                     </div>
                 </div>
                 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-50/50 text-slate-500 text-sm uppercase tracking-wider">
-                                <th className="px-10 py-5 font-bold border-b border-slate-200">Aday Adı</th>
-                                <th className="px-10 py-5 font-bold border-b border-slate-200">Pozisyon</th>
-                                <th className="px-10 py-5 font-bold border-b border-slate-200">İnceleyen İK</th>
-                                <th className="px-10 py-5 font-bold border-b border-slate-200">Maaş Beklentisi (Deşifre)</th>
-                                <th className="px-10 py-5 font-bold border-b border-slate-200 text-right">Aksiyon</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-slate-100">
-                            {candidates.length > 0 ? (
-                                candidates.map((candidate, index) => (
-                                    <tr key={index} className="hover:bg-slate-50 transition-colors group">
-                                        <td className="px-10 py-6 font-extrabold text-slate-800 text-lg">{candidate.name}</td>
-                                        <td className="px-10 py-6 font-bold text-slate-600">{candidate.position}</td>
-                                        <td className="px-10 py-6 font-medium text-blue-600">{candidate.evaluator_name}</td>
-                                        <td className="px-10 py-6 font-mono font-bold text-emerald-600 bg-emerald-50/30">
-                                            {candidate.decrypted_salary ? `${candidate.decrypted_salary} ₺` : 'Bekleniyor...'}
-                                        </td>
-                                        <td className="px-10 py-6 text-right">
-                                            <button className="text-indigo-600 hover:text-white font-bold bg-indigo-50 hover:bg-indigo-600 px-4 py-2 rounded-xl transition-all shadow-sm">
-                                                {t('admin.view_details')}
+                <div className="p-10">
+                    {candidates.length > 0 ? (
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                            {candidates.map((candidate) => (
+                                <div key={candidate.id} className="bg-slate-50 p-6 rounded-3xl shadow-inner border border-slate-100 flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <h4 className="text-2xl font-extrabold text-slate-800">{candidate.name}</h4>
+                                                <p className="text-md font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-lg inline-block mt-2">{candidate.position}</p>
+                                            </div>
+                                            <span className="bg-gradient-to-br from-slate-700 to-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2">
+                                                <span>AES</span> 🔒
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="bg-white p-4 rounded-2xl border-2 border-emerald-200 mb-4 shadow-sm relative overflow-hidden group">
+                                            <div className="absolute top-0 right-0 bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-1 rounded-bl-lg">{t('admin.decrypted_salary')}</div>
+                                            <p className="text-sm font-bold text-slate-500 mb-1">{t('admin.salary_label')}</p>
+                                            <p className="font-mono font-black text-emerald-700 text-xl">
+                                                {candidate.decrypted_salary} ₺
+                                            </p>
+                                        </div>
+
+                                        <div className="mb-4">
+                                            <p className="text-sm font-bold text-slate-500 mb-1">{t('admin.secret_note_label')}</p>
+                                            <p className="text-slate-700 font-medium bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 italic">
+                                                {candidate.secret_note ? `"${candidate.secret_note}"` : t('admin.no_note')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="mt-4 pt-4 border-t border-slate-200">
+                                        {selectedCandidate === candidate.id ? (
+                                            <div className="space-y-3">
+                                                <textarea 
+                                                    className="w-full bg-white border-2 border-indigo-200 rounded-xl p-3 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 font-medium"
+                                                    rows="3"
+                                                    placeholder={t('admin.note_placeholder')}
+                                                    value={secretNote}
+                                                    onChange={(e) => setSecretNote(e.target.value)}
+                                                />
+                                                <div className="flex gap-2">
+                                                    <button 
+                                                        onClick={() => handleSaveNote(candidate.id)}
+                                                        disabled={savingNote}
+                                                        className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition-colors flex-1"
+                                                    >
+                                                        {savingNote ? t('admin.saving_note') : t('admin.save_note')}
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { setSelectedCandidate(null); setSecretNote(''); }}
+                                                        className="bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors"
+                                                    >
+                                                        {t('admin.cancel')}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <button 
+                                                onClick={() => { setSelectedCandidate(candidate.id); setSecretNote(candidate.secret_note || ''); }}
+                                                className="w-full text-indigo-600 font-bold py-3 border-2 border-indigo-100 rounded-xl hover:bg-indigo-50 transition-colors flex justify-center items-center gap-2"
+                                            >
+                                                {t('admin.add_note_btn')}
                                             </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="5" className="px-10 py-16 text-center text-slate-500 text-xl font-medium bg-slate-50/50">
-                                        {t('admin.no_activity')}
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-16">
+                            <p className="text-2xl text-slate-400 font-bold mb-4">📭</p>
+                            <p className="text-xl text-slate-500 font-medium">{t('admin.no_activity')}</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
