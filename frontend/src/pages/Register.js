@@ -48,7 +48,9 @@ const Register = () => {
             setTimeout(() => navigate('/login'), 2000);
             
         } catch (err) {
-            setError(err.response?.data?.error || t('login.error_generic'));
+            // Backend 'error' veya 'message' anahtarı ile hata dönebilir
+            const errorMessage = err.response?.data?.error || err.response?.data?.message || t('login.error_generic');
+            setError(errorMessage);
             setLoading(false);
         }
     };
