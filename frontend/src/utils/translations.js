@@ -19,7 +19,7 @@ export const translations = {
         // Login
         "login.title": "Sign In to System",
         "login.or": "Or",
-        "login.register_link": "create a new HR account",
+        "login.register_link": "create a new account",
         "login.email": "Email Address",
         "login.password": "Password",
         "login.button": "Sign In",
@@ -105,7 +105,7 @@ export const translations = {
         // Login
         "login.title": "Sisteme Giriş Yap",
         "login.or": "Veya",
-        "login.register_link": "yeni bir İK hesabı oluşturun",
+        "login.register_link": "yeni hesap oluştur",
         "login.email": "E-posta Adresi",
         "login.password": "Şifre",
         "login.button": "Giriş Yap",
