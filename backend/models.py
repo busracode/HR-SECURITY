@@ -1,100 +1,131 @@
-import sqlite3
-from contextlib import contextmanager
-from security_logic import hash_password, encrypt_data
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from datetime import datetime
+from utils_security import SecurityManager
 
-DB_NAME = "database.db"
+db = SQLAlchemy()
 
-@contextmanager
-def get_db():
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    try:
-        yield conn
-        conn.commit()
-    finally:
-        conn.close()
+class User(UserMixin, db.Model):
+    __tablename__ = 'users'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(120), nullable=False)
+    last_name = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='Candidate')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    candidate = db.relationship('Candidate', uselist=False, back_populates='user')
+    applications_reviewed = db.relationship('Application', foreign_keys='Application.reviewed_by', back_populates='reviewer')
+    
+    def set_password(self, password):
+        self.password_hash = SecurityManager.hash_password(password)
+    
+    def check_password(self, password):
+        return SecurityManager.verify_password(self.password_hash, password)
+    
+    def has_role(self, role_name):
+        return self.role == role_name
+    
+    def __repr__(self):
+        return f'<User {self.email} ({self.role})>'
 
-def init_db():
-    with get_db() as conn:
-        cur = conn.cursor()
+class Candidate(db.Model):
+    __tablename__ = 'candidates'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
+    full_name = db.Column(db.String(120), nullable=False)
+    position = db.Column(db.String(100), nullable=False)
+    department = db.Column(db.String(100), nullable=False)
+    
+    salary_encrypted = db.Column(db.Text, nullable=True)
+    phone_encrypted = db.Column(db.Text, nullable=True)
+    
+    school = db.Column(db.String(150), nullable=False)
+    gpa = db.Column(db.Float)
+    experience_years = db.Column(db.Integer)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    user = db.relationship('User', back_populates='candidate')
+    applications = db.relationship('Application', back_populates='candidate', cascade='all, delete-orphan')
+    
+    def get_decrypted_salary(self):
+        if self.salary_encrypted:
+            try:
+                return SecurityManager.decrypt_data(self.salary_encrypted)
+            except Exception as e:
+                print(f"Salary decrypt error: {str(e)}")
+                return None
+        return None
+    
+    def get_decrypted_phone(self):
+        if self.phone_encrypted:
+            try:
+                return SecurityManager.decrypt_data(self.phone_encrypted)
+            except Exception as e:
+                print(f"Phone decrypt error: {str(e)}")
+                return None
+        return None
+    
+    def __repr__(self):
+        return f'<Candidate {self.full_name}>'
 
-        # Users table now includes email and role is NOT NULL
-        cur.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            first_name TEXT NOT NULL,
-            last_name TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            role TEXT NOT NULL
-        )
-        """)
+class Application(db.Model):
+    __tablename__ = 'applications'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    candidate_id = db.Column(db.Integer, db.ForeignKey('candidates.id'), nullable=False)
+    
+    position = db.Column(db.String(100), nullable=False)
+    salary_expected = db.Column(db.Text) # Storing encrypted salary string
+    department = db.Column(db.String(100), nullable=False)
+    school = db.Column(db.String(150))
+    gpa = db.Column(db.Float)
+    
+    status = db.Column(db.String(20), default='submitted')
+    application_date = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    reviewed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    review_date = db.Column(db.DateTime)
+    notes = db.Column(db.Text)
+    
+    candidate = db.relationship('Candidate', back_populates='applications')
+    reviewer = db.relationship('User', foreign_keys=[reviewed_by], back_populates='applications_reviewed')
+    
+    def is_pending(self):
+        return self.status == 'submitted'
+    
+    def is_accepted(self):
+        return self.status == 'accepted'
+    
+    def is_rejected(self):
+        return self.status == 'rejected'
+    
+    def __repr__(self):
+        return f'<Application {self.position} - {self.status}>'
 
-        # Applications table includes secret_note
-        cur.execute("""
-        CREATE TABLE IF NOT EXISTS applications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            first_name TEXT,
-            last_name TEXT,
-            job TEXT,
-            school TEXT,
-            department TEXT,
-            salary TEXT,
-            secret_note TEXT,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-        """)
+class AccessLog(db.Model):
+    __tablename__ = 'access_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    action = db.Column(db.String(100), nullable=False)
+    resource = db.Column(db.String(100))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    ip_address = db.Column(db.String(45))
+    
+    user = db.relationship('User')
+    
+    def __repr__(self):
+        return f'<Log {self.user_id} - {self.action}>'
 
-def insert_user(first_name, last_name, email, password, role="Candidate"):
-    hashed_password = hash_password(password)
-    with get_db() as conn:
-        try:
-            conn.execute("""
-            INSERT INTO users (first_name, last_name, email, password, role)
-            VALUES (?, ?, ?, ?, ?)
-            """, (first_name, last_name, email, hashed_password, role))
-            return True
-        except sqlite3.IntegrityError:
-            return False
-
-def update_user_role(user_id, new_role):
-    with get_db() as conn:
-        conn.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
-
-def get_user_by_email(email):
-    with get_db() as conn:
-        return conn.execute("""
-        SELECT * FROM users
-        WHERE email = ?
-        """, (email,)).fetchone()
-
-def get_user_by_id(user_id):
-    with get_db() as conn:
-        return conn.execute("""
-        SELECT * FROM users
-        WHERE id = ?
-        """, (user_id,)).fetchone()
-
-def insert_application(user_id, first_name, last_name, job, school, department, salary):
-    encrypted_school = encrypt_data(school)
-    encrypted_department = encrypt_data(department)
-    encrypted_salary = encrypt_data(salary)
-    with get_db() as conn:
-        conn.execute("""
-        INSERT INTO applications
-        (user_id, first_name, last_name, job, school, department, salary, secret_note)
-        VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
-        """, (user_id, first_name, last_name, job, encrypted_school, encrypted_department, encrypted_salary))
-
-def get_application_by_user(user_id):
-    with get_db() as conn:
-        return conn.execute("SELECT * FROM applications WHERE user_id = ?", (user_id,)).fetchone()
-
-def get_all_applications():
-    with get_db() as conn:
-        return conn.execute("SELECT * FROM applications").fetchall()
-
-def update_application_note(app_id, note):
-    with get_db() as conn:
-        conn.execute("UPDATE applications SET secret_note = ? WHERE id = ?", (note, app_id))
+def init_db(app):
+    with app.app_context():
+        db.create_all()
+        print("Database initialized successfully.")

@@ -1,0 +1,68 @@
+# SWE210 - Güvenli Aday Değerlendirme Sistemi
+# Gerekli Python Kütüphaneleri
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🔧 WEB FRAMEWORK
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Flask==2.3.3
+Werkzeug==2.3.7  # Flask'ın bağımlılığı, password hashing için
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 💾 VERİTABANI
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Flask-SQLAlchemy==3.0.5  # Veritabanı ORM
+SQLAlchemy>=2.0.30      # Advanced database toolkit
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🔐 AUTHENTICATION & SECURITY
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Flask-Login==0.6.2      # Kullanıcı oturum yönetimi
+cryptography==41.0.3    # Fernet şifreleme (sensitive data için)
+python-dotenv==1.0.0    # .env dosyası desteği (gizli anahtarlar)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 📝 FORM PROCESSING & VALIDATION
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Flask-WTF==1.1.1        # Form processing + CSRF protection
+WTForms==3.0.1          # Form validation
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 📊 DATA PROCESSING
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+email-validator==2.0.0  # Email doğrulama
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🧪 TEST & DEVELOPMENT
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+pytest==7.4.0           # Unit testing
+pytest-cov==4.1.0       # Code coverage
+Flask-Testing==0.8.1    # Flask test utilities
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 📝 NOTES (Kurulum)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Kurulum komutu:
+# pip install -r requirements.txt
+
+# Virtual environment oluşturma:
+# python -m venv venv
+# source venv/bin/activate  (Linux/Mac)
+# venv\Scripts\activate      (Windows)
+
+# Flask uygulamasını çalıştırma:
+# python app.py
+
+# Testleri çalıştırma:
+# pytest tests/
+
+# Encryption key oluşturma:
+# python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+PyJWT==2.8.0
+Flask-Cors==4.0.0

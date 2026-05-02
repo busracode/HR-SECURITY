@@ -1,17 +1,26 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from models import (
-    init_db, insert_user, get_user_by_email, insert_application, 
-    get_all_applications, get_application_by_user, update_application_note,
-    get_user_by_id, update_user_role
-)
+import os
+from dotenv import load_dotenv
+
+# Load environment variables first
+load_dotenv()
+
+from models import db, User, Candidate, Application, init_db
 from middleware import generate_token, token_required, hr_required
-from security_logic import verify_password, decrypt_data
+from config import DevelopmentConfig
+from utils_security import SecurityManager
 
 app = Flask(__name__)
+app.config.from_object(DevelopmentConfig)
 CORS(app)
 
-init_db()
+# Initialize SQLAlchemy
+db.init_app(app)
+
+# Create tables inside app context
+with app.app_context():
+    db.create_all()
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -24,11 +33,22 @@ def register():
     if not all([first_name, last_name, email, password]):
         return jsonify({"error": "All fields are required!"}), 400
 
-    success = insert_user(first_name, last_name, email, password)
-    if not success:
+    if User.query.filter_by(email=email).first():
         return jsonify({"error": "User with this email already exists!"}), 409
 
+    new_user = User(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        role="Candidate"
+    )
+    new_user.set_password(password)
+    
+    db.session.add(new_user)
+    db.session.commit()
+
     return jsonify({"message": "User registered successfully!"}), 201
+
 
 @app.route("/hr/upgrade", methods=["POST"])
 @token_required
@@ -40,7 +60,10 @@ def upgrade_to_hr():
         return jsonify({"error": "Geçersiz İK Yetki Kodu!"}), 403
         
     user_id = request.user["id"]
-    update_user_role(user_id, "HR")
+    user = User.query.get(user_id)
+    if user:
+        user.role = "HR"
+        db.session.commit()
     
     return jsonify({"message": "Yetkiniz İK olarak güncellendi! Lütfen tekrar giriş yapın."}), 200
 
@@ -54,12 +77,20 @@ def login():
     if not email or not password:
         return jsonify({"error": "Email and password required!"}), 400
 
-    user = get_user_by_email(email)
-    if not user or not verify_password(user["password"], password):
+    user = User.query.filter_by(email=email).first()
+    
+    if not user or not user.check_password(password):
         return jsonify({"error": "Invalid credentials!"}), 401
 
-    token = generate_token(user["id"], user["first_name"], user["last_name"], user["role"])
-    return jsonify({"token": token, "role": user["role"], "user": {"first_name": user["first_name"], "last_name": user["last_name"]}}), 200
+    token = generate_token(user.id, user.first_name, user.last_name, user.role)
+    return jsonify({
+        "token": token, 
+        "role": user.role, 
+        "user": {
+            "first_name": user.first_name, 
+            "last_name": user.last_name
+        }
+    }), 200
 
 
 @app.route("/apply", methods=["POST"])
@@ -81,11 +112,37 @@ def apply():
     if not all([first_name, last_name, job, school, department, salary]):
         return jsonify({"error": "All fields are required!"}), 400
 
-    existing_app = get_application_by_user(user_id)
+    # Ensure user has a candidate profile
+    candidate = Candidate.query.filter_by(user_id=user_id).first()
+    if not candidate:
+        candidate = Candidate(
+            user_id=user_id,
+            full_name=f"{first_name} {last_name}",
+            position=job,
+            department=department,
+            school=school
+        )
+        db.session.add(candidate)
+        db.session.commit()
+        
+    existing_app = Application.query.filter_by(candidate_id=candidate.id).first()
     if existing_app:
         return jsonify({"error": "You have already submitted an application!"}), 400
 
-    insert_application(user_id, first_name, last_name, job, school, department, salary)
+    # Encrypt the sensitive salary
+    encrypted_salary = SecurityManager.encrypt_data(salary)
+
+    new_app = Application(
+        candidate_id=candidate.id,
+        position=job,
+        department=department,
+        school=school,
+        salary_expected=encrypted_salary
+    )
+    
+    db.session.add(new_app)
+    db.session.commit()
+    
     return jsonify({"message": "Application submitted successfully!"}), 201
 
 
@@ -96,20 +153,36 @@ def get_my_application():
         return jsonify({"error": "Only candidates can access this route!"}), 403
     
     user_id = request.user["id"]
-    app_row = get_application_by_user(user_id)
+    candidate = Candidate.query.filter_by(user_id=user_id).first()
+    
+    if not candidate:
+        return jsonify({"application": None}), 200
+        
+    app_row = Application.query.filter_by(candidate_id=candidate.id).first()
     
     if not app_row:
         return jsonify({"application": None}), 200
 
+    # Use utils_security logic to decrypt. Usually only HR does this, but keeping it per previous logic
+    decrypted_salary = "Gizli"
+    if app_row.salary_expected:
+        try:
+            decrypted_salary = SecurityManager.decrypt_data(app_row.salary_expected)
+        except Exception:
+            pass
+
+    # Note: Previous code decrypted school/department as well, but in new models they are plain text.
+    # We will return them as they are.
+    user = candidate.user
     return jsonify({
         "application": {
-            "id": app_row["id"],
-            "first_name": app_row["first_name"],
-            "last_name": app_row["last_name"],
-            "job": app_row["job"],
-            "school": decrypt_data(app_row["school"]),
-            "department": decrypt_data(app_row["department"]),
-            "salary": decrypt_data(app_row["salary"])
+            "id": app_row.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "job": app_row.position,
+            "school": app_row.school,
+            "department": app_row.department,
+            "salary": decrypted_salary
         }
     }), 200
 
@@ -117,37 +190,57 @@ def get_my_application():
 @app.route("/hr/candidates", methods=["GET"])
 @hr_required
 def get_all_candidates():
-    applications = get_all_applications()
+    applications = Application.query.all()
     result = []
     for app_row in applications:
-        # Also let's get the user to see if we want email. But not strictly needed right now.
+        candidate = app_row.candidate
+        user = candidate.user
+        
+        decrypted_salary = ""
+        if app_row.salary_expected:
+            try:
+                decrypted_salary = SecurityManager.decrypt_data(app_row.salary_expected)
+            except Exception:
+                decrypted_salary = "[ŞİFRELEME HATASI]"
+
         result.append({
-            "id": app_row["id"],
-            "name": f'{app_row["first_name"]} {app_row["last_name"]}',
-            "position": app_row["job"],
+            "id": app_row.id,
+            "name": f"{user.first_name} {user.last_name}",
+            "position": app_row.position,
             "evaluator_name": "Sistem", # Placeholder for now
-            "decrypted_salary": decrypt_data(app_row["salary"]),
-            "secret_note": app_row["secret_note"]
+            "decrypted_salary": decrypted_salary,
+            "secret_note": app_row.notes
         })
     return jsonify(result), 200
+
 
 @app.route("/hr/stats", methods=["GET"])
 @hr_required
 def get_hr_stats():
-    applications = get_all_applications()
+    applications = Application.query.all()
+    pending = [a for a in applications if not a.notes]
     return jsonify({
         "totalCandidates": len(applications),
-        "pendingReviews": len([a for a in applications if not a["secret_note"]]),
+        "pendingReviews": len(pending),
         "alerts": 0
     }), 200
+
 
 @app.route("/hr/candidates/<int:candidate_id>/note", methods=["POST"])
 @hr_required
 def add_note(candidate_id):
     data = request.get_json()
     note = data.get("note", "")
-    update_application_note(candidate_id, note)
-    return jsonify({"message": "Note updated successfully!"}), 200
+    
+    app_row = Application.query.get(candidate_id)
+    if app_row:
+        app_row.notes = note
+        app_row.reviewed_by = request.user["id"]
+        app_row.status = 'reviewing'
+        db.session.commit()
+        return jsonify({"message": "Note updated successfully!"}), 200
+    return jsonify({"error": "Application not found"}), 404
+
 
 if __name__ == "__main__":
     app.run(debug=True)
